@@ -1,3 +1,4 @@
+use crate::filter::CompiledFunctionExpr;
 use super::field_expr::LhsFieldExpr;
 use crate::{
     execution_context::ExecutionContext,
@@ -98,6 +99,25 @@ impl<'s> FunctionCallExpr<'s> {
                     .iter()
                     .map(|opt_arg| opt_arg.default_value.as_ref()),
             ),
+        )
+    }
+
+    pub fn compile(self) -> CompiledFunctionExpr<'s> {
+
+        let mut values: Vec<Option<LhsValue<'s>>> = Vec::new();
+        values.resize(self.function.params.len() + self.function.opt_params.len(), None);
+        let mut values = values.into_boxed_slice();
+
+        let args = self.args.clone();
+        CompiledFunctionExpr::new(
+            move |ctx: &'s ExecutionContext<'s>| {
+                let mut i = 0;
+                while i < args.len() {
+                    values[i] = Some(args[i].execute(ctx));
+                    i += 1;
+                }
+                self.function.implementation.execute(values.iter().map(|value| value.unwrap())).as_ref()
+            },
         )
     }
 }

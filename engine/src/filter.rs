@@ -1,3 +1,4 @@
+use crate::types::LhsValue;
 use crate::{execution_context::ExecutionContext, scheme::Scheme};
 use failure::Fail;
 
@@ -13,16 +14,32 @@ pub struct SchemeMismatchError;
 // under the hood propagates field values to its leafs by recursively calling
 // their `execute` methods and aggregating results into a single boolean value
 // as recursion unwinds.
-pub(crate) struct CompiledExpr<'s>(Box<dyn 's + Fn(&ExecutionContext<'s>) -> bool>);
+pub(crate) struct CompiledExpr<'s>(Box<dyn 's + Fn(&'s ExecutionContext<'s>) -> bool>);
 
 impl<'s> CompiledExpr<'s> {
     /// Creates a compiled expression IR from a generic closure.
-    pub(crate) fn new(closure: impl 's + Fn(&ExecutionContext<'s>) -> bool) -> Self {
+    pub(crate) fn new(closure: impl 's + Fn(&'s ExecutionContext<'s>) -> bool) -> Self {
         CompiledExpr(Box::new(closure))
     }
 
     /// Executes a filter against a provided context with values.
-    pub fn execute(&self, ctx: &ExecutionContext<'s>) -> bool {
+    pub fn execute(&self, ctx: &'s ExecutionContext<'s>) -> bool {
+        self.0(ctx)
+    }
+}
+
+pub(crate) struct CompiledFunctionExpr<'s>(Box<dyn 's + FnMut(&'s ExecutionContext<'s>) -> LhsValue<'s>>);
+
+impl<'s> CompiledFunctionExpr<'s> {
+    /// Creates a compiled expression IR from a generic closure.
+    pub(crate) fn new(closure: impl 's + FnMut(&'s ExecutionContext<'s>) -> LhsValue<'s>) -> Self {
+        CompiledFunctionExpr(
+            Box::new(closure)
+        )
+    }
+
+    /// Executes a filter against a provided context with values.
+    pub fn execute(&mut self, ctx: &'s ExecutionContext<'s>) -> LhsValue<'s> {
         self.0(ctx)
     }
 }
@@ -54,7 +71,7 @@ impl<'s> Filter<'s> {
     }
 
     /// Executes a filter against a provided context with values.
-    pub fn execute(&self, ctx: &ExecutionContext<'s>) -> Result<bool, SchemeMismatchError> {
+    pub fn execute(&self, ctx: &'s ExecutionContext<'s>) -> Result<bool, SchemeMismatchError> {
         if self.scheme == ctx.scheme() {
             Ok(self.root_expr.execute(ctx))
         } else {
@@ -72,8 +89,9 @@ mod tests {
     fn test_scheme_mismatch() {
         let scheme1 = Scheme! { foo: Int };
         let scheme2 = Scheme! { foo: Int, bar: Int };
-        let filter = scheme1.parse("foo == 42").unwrap().compile();
+        let filter = scheme1.parse("foo == 42").unwrap();
         let ctx = ExecutionContext::new(&scheme2);
+        let filter = filter.compile();
 
         assert_eq!(filter.execute(&ctx), Err(SchemeMismatchError));
     }

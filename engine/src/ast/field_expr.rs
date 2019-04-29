@@ -1,4 +1,5 @@
 // use crate::filter::CompiledExpr;
+use crate::execution_context::ExecutionContext;
 use super::{function_expr::FunctionCallExpr, Expr};
 use crate::{
     filter::CompiledExpr,
@@ -145,7 +146,8 @@ impl<'s> LhsFieldExpr<'s> {
     {
         match self {
             LhsFieldExpr::FunctionCallExpr(call) => {
-                CompiledExpr::new(move |ctx| func(call.execute(ctx)))
+                let tmp = call.compile();
+                CompiledExpr::new(move |ctx: &'s ExecutionContext<'s>| func(tmp.execute(ctx)))
             }
             LhsFieldExpr::Field(f) => {
                 CompiledExpr::new(move |ctx| func(ctx.get_field_value_unchecked(f)))
