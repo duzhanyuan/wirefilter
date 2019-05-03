@@ -171,7 +171,7 @@ impl<'s> GetType for LhsFieldExpr<'s> {
     fn get_type(&self) -> Type {
         match self {
             LhsFieldExpr::Field(field) => field.get_type(),
-            LhsFieldExpr::FunctionCallExpr(call) => call.function.return_type,
+            LhsFieldExpr::FunctionCallExpr(call) => call.function.get_type(),
         }
     }
 }
@@ -358,7 +358,7 @@ mod tests {
             scheme
                 .add_function(
                     "echo".into(),
-                    Function {
+                    Box::new(Function {
                         params: vec![FunctionParam {
                             arg_kind: FunctionArgKind::Field,
                             val_type: Type::Bytes,
@@ -366,13 +366,13 @@ mod tests {
                         opt_params: vec![],
                         return_type: Type::Bytes,
                         implementation: FunctionImpl::new(echo_function),
-                    },
+                    }),
                 )
                 .unwrap();
             scheme
                 .add_function(
                     "lowercase".into(),
-                    Function {
+                    Box::new(Function {
                         params: vec![FunctionParam {
                             arg_kind: FunctionArgKind::Field,
                             val_type: Type::Bytes,
@@ -380,13 +380,13 @@ mod tests {
                         opt_params: vec![],
                         return_type: Type::Bytes,
                         implementation: FunctionImpl::new(lowercase_function),
-                    },
+                    }),
                 )
                 .unwrap();
             scheme
                 .add_function(
                     "concat".into(),
-                    Function {
+                    Box::new(Function {
                         params: vec![FunctionParam {
                             arg_kind: FunctionArgKind::Field,
                             val_type: Type::Bytes,
@@ -397,7 +397,7 @@ mod tests {
                         }],
                         return_type: Type::Bytes,
                         implementation: FunctionImpl::new(concat_function),
-                    },
+                    }),
                 )
                 .unwrap();
             scheme

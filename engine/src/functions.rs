@@ -1,6 +1,6 @@
 use crate::types::{GetType, LhsValue, Type};
 use failure::Fail;
-use std::fmt;
+use std::fmt::{self, Debug};
 
 /// An iterator over function arguments as [`LhsValue`]s.
 pub type FunctionArgs<'i, 'a> = &'i mut dyn Iterator<Item = LhsValue<'a>>;
@@ -80,7 +80,7 @@ pub struct FunctionOptParam {
 }
 
 /// Trait to implement function
-pub trait FunctionDefinition: GetType {
+pub trait FunctionDefinition: GetType + Debug + Sync {
     /// Check if the parameter specified at index `index` is correct.
     /// Return the expected the parameter definition.
     fn check_param(&self, index: usize, param: FunctionParam) -> Option<FunctionParam>;
@@ -91,7 +91,9 @@ pub trait FunctionDefinition: GetType {
     /// Get default value for optional arguments.
     fn default_value(&self, index: usize) -> Option<LhsValue>;
     /// Execute the real implementation
-    fn execute<'a>(&self, args: impl IntoIterator<Item = LhsValue<'a>>) -> LhsValue<'a>;
+    fn execute<'a>(&self, args: impl IntoIterator<Item = LhsValue<'a>>) -> LhsValue<'a>
+    where
+        Self: Sized;
 }
 
 /// Defines a function.
