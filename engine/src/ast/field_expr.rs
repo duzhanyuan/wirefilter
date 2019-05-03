@@ -171,7 +171,7 @@ impl<'s> GetType for LhsFieldExpr<'s> {
     fn get_type(&self) -> Type {
         match self {
             LhsFieldExpr::Field(field) => field.get_type(),
-            LhsFieldExpr::FunctionCallExpr(call) => call.function.get_type(),
+            LhsFieldExpr::FunctionCallExpr(call) => call.function.definition.get_type(),
         }
     }
 }
@@ -314,6 +314,7 @@ mod tests {
         execution_context::ExecutionContext,
         functions::{
             Function, FunctionArgKind, FunctionArgs, FunctionImpl, FunctionOptParam, FunctionParam,
+            StaticFunctionDefinition,
         },
         rhs_types::IpRange,
     };
@@ -348,6 +349,33 @@ mod tests {
     }
 
     lazy_static! {
+        static ref ECHO_DEF: StaticFunctionDefinition = StaticFunctionDefinition {
+            params: vec![FunctionParam {
+                arg_kind: FunctionArgKind::Field,
+                val_type: Type::Bytes,
+            }],
+            opt_params: vec![],
+            return_type: Type::Bytes,
+        };
+        static ref LOWERCASE_DEF: StaticFunctionDefinition = StaticFunctionDefinition {
+            params: vec![FunctionParam {
+                arg_kind: FunctionArgKind::Field,
+                val_type: Type::Bytes,
+            }],
+            opt_params: vec![],
+            return_type: Type::Bytes,
+        };
+        static ref CONCAT_DEF: StaticFunctionDefinition = StaticFunctionDefinition {
+            params: vec![FunctionParam {
+                arg_kind: FunctionArgKind::Field,
+                val_type: Type::Bytes,
+            }],
+            opt_params: vec![FunctionOptParam {
+                arg_kind: FunctionArgKind::Literal,
+                default_value: "".into(),
+            }],
+            return_type: Type::Bytes,
+        };
         static ref SCHEME: Scheme = {
             let mut scheme: Scheme = Scheme! {
                 http.host: Bytes,
@@ -358,46 +386,28 @@ mod tests {
             scheme
                 .add_function(
                     "echo".into(),
-                    Box::new(Function {
-                        params: vec![FunctionParam {
-                            arg_kind: FunctionArgKind::Field,
-                            val_type: Type::Bytes,
-                        }],
-                        opt_params: vec![],
-                        return_type: Type::Bytes,
+                    Function {
+                        definition: &(*ECHO_DEF),
                         implementation: FunctionImpl::new(echo_function),
-                    }),
+                    },
                 )
                 .unwrap();
             scheme
                 .add_function(
                     "lowercase".into(),
-                    Box::new(Function {
-                        params: vec![FunctionParam {
-                            arg_kind: FunctionArgKind::Field,
-                            val_type: Type::Bytes,
-                        }],
-                        opt_params: vec![],
-                        return_type: Type::Bytes,
+                    Function {
+                        definition: &(*LOWERCASE_DEF),
                         implementation: FunctionImpl::new(lowercase_function),
-                    }),
+                    },
                 )
                 .unwrap();
             scheme
                 .add_function(
                     "concat".into(),
-                    Box::new(Function {
-                        params: vec![FunctionParam {
-                            arg_kind: FunctionArgKind::Field,
-                            val_type: Type::Bytes,
-                        }],
-                        opt_params: vec![FunctionOptParam {
-                            arg_kind: FunctionArgKind::Literal,
-                            default_value: "".into(),
-                        }],
-                        return_type: Type::Bytes,
+                    Function {
+                        definition: &(*CONCAT_DEF),
                         implementation: FunctionImpl::new(concat_function),
-                    }),
+                    },
                 )
                 .unwrap();
             scheme

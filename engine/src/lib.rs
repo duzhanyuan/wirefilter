@@ -77,7 +77,7 @@ pub use self::{
     filter::{Filter, SchemeMismatchError},
     functions::{
         Function, FunctionArgKind, FunctionArgs, FunctionDefinition, FunctionImpl,
-        FunctionOptParam, FunctionParam,
+        FunctionOptParam, FunctionParam, StaticFunctionDefinition,
     },
     scheme::{FieldRedefinitionError, ParseError, Scheme, UnknownFieldError},
     types::{GetType, LhsValue, Type, TypeMismatchError},

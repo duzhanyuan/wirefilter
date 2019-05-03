@@ -90,32 +90,26 @@ pub trait FunctionDefinition: GetType + Debug + Sync {
     fn max_arg_count(&self) -> usize;
     /// Get default value for optional arguments.
     fn default_value(&self, index: usize) -> Option<LhsValue>;
-    /// Execute the real implementation
-    fn execute<'a>(&self, args: impl IntoIterator<Item = LhsValue<'a>>) -> LhsValue<'a>
-    where
-        Self: Sized;
 }
 
 /// Defines a function.
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Function {
+pub struct StaticFunctionDefinition {
     /// List of mandatory arguments.
     pub params: Vec<FunctionParam>,
     /// List of optional arguments that can be specified after manatory ones.
     pub opt_params: Vec<FunctionOptParam>,
     /// Function return type.
     pub return_type: Type,
-    /// Actual implementation that will be called at runtime.
-    pub implementation: FunctionImpl,
 }
 
-impl GetType for Function {
+impl GetType for StaticFunctionDefinition {
     fn get_type(&self) -> Type {
         self.return_type
     }
 }
 
-impl FunctionDefinition for Function {
+impl FunctionDefinition for StaticFunctionDefinition {
     fn check_param(&self, index: usize, _: FunctionParam) -> Option<FunctionParam> {
         if index < self.params.len() {
             return self.params.get(index).cloned();
@@ -144,8 +138,20 @@ impl FunctionDefinition for Function {
             .get(index - self.params.len())
             .map(|opt_param| opt_param.default_value.as_ref())
     }
+}
 
-    fn execute<'a>(&self, args: impl IntoIterator<Item = LhsValue<'a>>) -> LhsValue<'a> {
+/// Defines a function.
+#[derive(Debug, Clone)]
+pub struct Function {
+    /// Definition of the function that will be used to validate each call.
+    pub definition: &'static dyn FunctionDefinition,
+    /// Actual implementation that will be called at runtime.
+    pub implementation: FunctionImpl,
+}
+
+impl Function {
+    /// Execute the actual implementation
+    pub fn execute<'a>(&self, args: impl IntoIterator<Item = LhsValue<'a>>) -> LhsValue<'a> {
         self.implementation.execute(args)
     }
 }

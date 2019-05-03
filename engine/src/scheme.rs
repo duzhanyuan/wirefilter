@@ -1,6 +1,6 @@
 use crate::{
     ast::FilterAst,
-    functions::FunctionDefinition,
+    functions::Function,
     lex::{complete, expect, span, take_while, LexErrorKind, LexResult, LexWith},
     types::{GetType, Type},
 };
@@ -193,7 +193,7 @@ impl<'i> Display for ParseError<'i> {
 pub struct Scheme {
     fields: IndexMap<String, Type, FnvBuildHasher>,
     #[serde(skip)]
-    functions: IndexMap<String, Box<dyn FunctionDefinition>, FnvBuildHasher>,
+    functions: IndexMap<String, Function, FnvBuildHasher>,
 }
 
 impl PartialEq for Scheme {
@@ -267,7 +267,7 @@ impl<'s> Scheme {
     pub fn add_function(
         &mut self,
         name: String,
-        function: Box<dyn FunctionDefinition>,
+        function: Function,
     ) -> Result<(), ItemRedefinitionError> {
         if self.fields.contains_key(&name) {
             return Err(ItemRedefinitionError::Field(FieldRedefinitionError(name)));
@@ -292,10 +292,7 @@ impl<'s> Scheme {
     // }
     // Ok(())
     // }
-    pub(crate) fn get_function(
-        &'s self,
-        name: &str,
-    ) -> Result<&'s Box<dyn FunctionDefinition>, UnknownFunctionError> {
+    pub(crate) fn get_function(&'s self, name: &str) -> Result<&'s Function, UnknownFunctionError> {
         self.functions.get(name).ok_or(UnknownFunctionError)
     }
 
