@@ -313,7 +313,7 @@ mod tests {
         ast::function_expr::{FunctionCallArgExpr, FunctionCallExpr},
         execution_context::ExecutionContext,
         functions::{
-            Function, FunctionArgKind, FunctionArgs, FunctionImpl, FunctionOptParam, FunctionParam,
+            Function, FunctionArgKind, FunctionArgs, FunctionOptParam, FunctionParam,
             StaticFunctionDefinition,
         },
         rhs_types::IpRange,
@@ -349,33 +349,6 @@ mod tests {
     }
 
     lazy_static! {
-        static ref ECHO_DEF: StaticFunctionDefinition = StaticFunctionDefinition {
-            params: vec![FunctionParam {
-                arg_kind: FunctionArgKind::Field,
-                val_type: Type::Bytes,
-            }],
-            opt_params: vec![],
-            return_type: Type::Bytes,
-        };
-        static ref LOWERCASE_DEF: StaticFunctionDefinition = StaticFunctionDefinition {
-            params: vec![FunctionParam {
-                arg_kind: FunctionArgKind::Field,
-                val_type: Type::Bytes,
-            }],
-            opt_params: vec![],
-            return_type: Type::Bytes,
-        };
-        static ref CONCAT_DEF: StaticFunctionDefinition = StaticFunctionDefinition {
-            params: vec![FunctionParam {
-                arg_kind: FunctionArgKind::Field,
-                val_type: Type::Bytes,
-            }],
-            opt_params: vec![FunctionOptParam {
-                arg_kind: FunctionArgKind::Literal,
-                default_value: "".into(),
-            }],
-            return_type: Type::Bytes,
-        };
         static ref SCHEME: Scheme = {
             let mut scheme: Scheme = Scheme! {
                 http.host: Bytes,
@@ -386,28 +359,52 @@ mod tests {
             scheme
                 .add_function(
                     "echo".into(),
-                    Function {
-                        definition: &(*ECHO_DEF),
-                        implementation: FunctionImpl::new(echo_function),
-                    },
+                    Function::new(
+                        StaticFunctionDefinition {
+                            params: vec![FunctionParam {
+                                arg_kind: FunctionArgKind::Field,
+                                val_type: Type::Bytes,
+                            }],
+                            opt_params: vec![],
+                            return_type: Type::Bytes,
+                        },
+                        echo_function,
+                    ),
                 )
                 .unwrap();
             scheme
                 .add_function(
                     "lowercase".into(),
-                    Function {
-                        definition: &(*LOWERCASE_DEF),
-                        implementation: FunctionImpl::new(lowercase_function),
-                    },
+                    Function::new(
+                        StaticFunctionDefinition {
+                            params: vec![FunctionParam {
+                                arg_kind: FunctionArgKind::Field,
+                                val_type: Type::Bytes,
+                            }],
+                            opt_params: vec![],
+                            return_type: Type::Bytes,
+                        },
+                        lowercase_function,
+                    ),
                 )
                 .unwrap();
             scheme
                 .add_function(
                     "concat".into(),
-                    Function {
-                        definition: &(*CONCAT_DEF),
-                        implementation: FunctionImpl::new(concat_function),
-                    },
+                    Function::new(
+                        StaticFunctionDefinition {
+                            params: vec![FunctionParam {
+                                arg_kind: FunctionArgKind::Field,
+                                val_type: Type::Bytes,
+                            }],
+                            opt_params: vec![FunctionOptParam {
+                                arg_kind: FunctionArgKind::Literal,
+                                default_value: "".into(),
+                            }],
+                            return_type: Type::Bytes,
+                        },
+                        concat_function,
+                    ),
                 )
                 .unwrap();
             scheme

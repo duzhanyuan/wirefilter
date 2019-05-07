@@ -1,26 +1,11 @@
-use lazy_static::lazy_static;
 use std::env::args;
 use wirefilter::{
-    Function, FunctionArgKind, FunctionArgs, FunctionImpl, FunctionOptParam, FunctionParam,
-    LhsValue, Scheme, StaticFunctionDefinition, Type,
+    Function, FunctionArgKind, FunctionArgs, FunctionOptParam, FunctionParam, LhsValue, Scheme,
+    StaticFunctionDefinition, Type,
 };
 
 fn panic_function<'a>(_: FunctionArgs<'_, 'a>) -> LhsValue<'a> {
     panic!();
-}
-
-lazy_static! {
-    static ref PANIC_DEF: StaticFunctionDefinition = StaticFunctionDefinition {
-        params: vec![FunctionParam {
-            arg_kind: FunctionArgKind::Field,
-            val_type: Type::Bytes,
-        }],
-        opt_params: vec![FunctionOptParam {
-            arg_kind: FunctionArgKind::Literal,
-            default_value: "".into(),
-        }],
-        return_type: Type::Bytes,
-    };
 }
 
 fn main() {
@@ -38,10 +23,20 @@ fn main() {
     scheme
         .add_function(
             "panic".into(),
-            Function {
-                definition: &(*PANIC_DEF),
-                implementation: FunctionImpl::new(panic_function),
-            },
+            Function::new(
+                StaticFunctionDefinition {
+                    params: vec![FunctionParam {
+                        arg_kind: FunctionArgKind::Field,
+                        val_type: Type::Bytes,
+                    }],
+                    opt_params: vec![FunctionOptParam {
+                        arg_kind: FunctionArgKind::Literal,
+                        default_value: "".into(),
+                    }],
+                    return_type: Type::Bytes,
+                },
+                panic_function,
+            ),
         )
         .unwrap();
 

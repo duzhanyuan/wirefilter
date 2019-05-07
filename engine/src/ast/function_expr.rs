@@ -260,9 +260,7 @@ impl<'i, 's> LexWith<'i, &'s Scheme> for FunctionCallExpr<'s> {
 #[test]
 fn test_function() {
     use crate::{
-        functions::{
-            Function, FunctionArgs, FunctionImpl, FunctionOptParam, StaticFunctionDefinition,
-        },
+        functions::{Function, FunctionArgs, FunctionOptParam, StaticFunctionDefinition},
         types::Type,
     };
     use lazy_static::lazy_static;
@@ -272,17 +270,6 @@ fn test_function() {
     }
 
     lazy_static! {
-        static ref ECHO_DEF: StaticFunctionDefinition = StaticFunctionDefinition {
-            params: vec![FunctionParam {
-                arg_kind: FunctionArgKind::Field,
-                val_type: Type::Bytes,
-            }],
-            opt_params: vec![FunctionOptParam {
-                arg_kind: FunctionArgKind::Literal,
-                default_value: LhsValue::Int(10),
-            }],
-            return_type: Type::Bytes,
-        };
         static ref SCHEME: Scheme = {
             let mut scheme = Scheme! {
                 http.host: Bytes,
@@ -293,10 +280,20 @@ fn test_function() {
             scheme
                 .add_function(
                     "echo".into(),
-                    Function {
-                        definition: &(*ECHO_DEF),
-                        implementation: FunctionImpl::new(echo_function),
-                    },
+                    Function::new(
+                        StaticFunctionDefinition {
+                            params: vec![FunctionParam {
+                                arg_kind: FunctionArgKind::Field,
+                                val_type: Type::Bytes,
+                            }],
+                            opt_params: vec![FunctionOptParam {
+                                arg_kind: FunctionArgKind::Literal,
+                                default_value: LhsValue::Int(10),
+                            }],
+                            return_type: Type::Bytes,
+                        },
+                        echo_function,
+                    ),
                 )
                 .unwrap();
             scheme

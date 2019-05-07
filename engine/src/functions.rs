@@ -80,7 +80,7 @@ pub struct FunctionOptParam {
 }
 
 /// Trait to implement function
-pub trait FunctionDefinition: GetType + Debug + Sync {
+pub trait FunctionDefinition: GetType + Debug + Sync + Send {
     /// Check if the parameter specified at index `index` is correct.
     /// Return the expected the parameter definition.
     fn check_param(&self, index: usize, param: FunctionParam) -> Option<FunctionParam>;
@@ -144,12 +144,19 @@ impl FunctionDefinition for StaticFunctionDefinition {
 #[derive(Debug, Clone)]
 pub struct Function {
     /// Definition of the function that will be used to validate each call.
-    pub definition: &'static dyn FunctionDefinition,
+    pub(crate) definition: std::sync::Arc<dyn FunctionDefinition>,
     /// Actual implementation that will be called at runtime.
-    pub implementation: FunctionImpl,
+    pub(crate) implementation: FunctionImpl,
 }
 
 impl Function {
+    /// Create a new function.
+    pub fn new(def: impl FunctionDefinition + 'static, func: FunctionPtr) -> Self {
+        Self {
+            definition: std::sync::Arc::new(def),
+            implementation: FunctionImpl::new(func),
+        }
+    }
     /// Execute the actual implementation
     pub fn execute<'a>(&self, args: impl IntoIterator<Item = LhsValue<'a>>) -> LhsValue<'a> {
         self.implementation.execute(args)
