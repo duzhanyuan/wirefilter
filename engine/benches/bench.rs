@@ -10,8 +10,8 @@ use criterion::{
 };
 use std::{borrow::Cow, clone::Clone, fmt::Debug, net::IpAddr};
 use wirefilter::{
-    ExecutionContext, FilterAst, Function, FunctionArgKind, FunctionArgs, FunctionImpl,
-    FunctionParam, GetType, LhsValue, Scheme, Type,
+    ExecutionContext, FilterAst, Function, FunctionArgKind, FunctionArgs, FunctionParam, GetType,
+    LhsValue, Scheme, StaticFunctionDefinition, Type,
 };
 
 fn lowercase<'a>(args: FunctionArgs<'_, 'a>) -> LhsValue<'a> {
@@ -210,27 +210,31 @@ fn bench_string_function_comparison(c: &mut Criterion) {
         functions: &[
             (
                 "lowercase",
-                Function {
-                    params: vec![FunctionParam {
-                        arg_kind: FunctionArgKind::Field,
-                        val_type: Type::Bytes,
-                    }],
-                    opt_params: vec![],
-                    return_type: Type::Bytes,
-                    implementation: FunctionImpl::new(lowercase),
-                },
+                Function::new(
+                    StaticFunctionDefinition {
+                        params: vec![FunctionParam {
+                            arg_kind: FunctionArgKind::Field,
+                            val_type: Type::Bytes,
+                        }],
+                        opt_params: vec![],
+                        return_type: Type::Bytes,
+                    },
+                    lowercase,
+                ),
             ),
             (
                 "uppercase",
-                Function {
-                    params: vec![FunctionParam {
-                        arg_kind: FunctionArgKind::Field,
-                        val_type: Type::Bytes,
-                    }],
-                    opt_params: vec![],
-                    return_type: Type::Bytes,
-                    implementation: FunctionImpl::new(uppercase),
-                },
+                Function::new(
+                    StaticFunctionDefinition {
+                        params: vec![FunctionParam {
+                            arg_kind: FunctionArgKind::Field,
+                            val_type: Type::Bytes,
+                        }],
+                        opt_params: vec![],
+                        return_type: Type::Bytes,
+                    },
+                    uppercase,
+                ),
             ),
         ],
         filters: &[
