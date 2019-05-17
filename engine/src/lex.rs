@@ -79,6 +79,9 @@ pub enum LexErrorKind {
 
     #[fail(display = "{}", _0)]
     InvalidIndexAccess(#[cause] IndexAccessError),
+
+    #[fail(display = "{}", _0)]
+    TypeMismatch(#[cause] TypeMismatchError),
 }
 
 pub type LexError<'i> = (LexErrorKind, &'i str);
